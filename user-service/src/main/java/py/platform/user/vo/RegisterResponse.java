@@ -1,11 +1,11 @@
 package py.platform.user.vo;
 
-import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
+
+import lombok.Data;
 
 /**
- * 用户注册响应参数（企业级）
+ * 用户注册响应参数
  */
 @Data
 public class RegisterResponse {

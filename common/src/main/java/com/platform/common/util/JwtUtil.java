@@ -22,29 +22,33 @@ public class JwtUtil {
 
     /**
      * 生成 JWT Token
+     * 
      * @param username 用户名
      * @return token
      */
-    public static String generateToken(String username) {
+    public static String generateToken(Long userId, String username) {
         return Jwts.builder()
                 .setSubject(username)
+                .claim("userId", userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(key)
                 .compact();
     }
 
-    /**
-     * 解析 Token 获取用户名
-     * @param token token
-     * @return 用户名
-     */
-    public static String getUsername(String token) {
+    public static Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
     }
-} 
+
+    public static String getUsername(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public static Long getUserId(String token) {
+        return getClaims(token).get("userId", Long.class);
+    }
+}

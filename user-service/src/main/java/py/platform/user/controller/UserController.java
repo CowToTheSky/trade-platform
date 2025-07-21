@@ -1,13 +1,19 @@
 package py.platform.user.controller;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.platform.common.vo.ResponseVO;
+
+import lombok.RequiredArgsConstructor;
 import py.platform.user.model.User;
 import py.platform.user.service.UserService;
 import py.platform.user.vo.LoginRequest;
 import py.platform.user.vo.LoginResponse;
-import com.platform.common.vo.ResponseVO;
 import py.platform.user.vo.RegisterRequest;
 import py.platform.user.vo.RegisterResponse;
 
@@ -24,28 +30,30 @@ public class UserController {
 
     /**
      * 用户登录接口
+     * 
      * @param request 登录请求参数
      * @return 登录响应（含JWT Token）
      */
     @PostMapping("/login")
     public ResponseVO<LoginResponse> login(@RequestBody LoginRequest request) {
-        LoginResponse resp = userService.login(request);
-        return ResponseVO.success(resp);
+        ResponseVO<LoginResponse> resp = userService.login(request);
+        return resp;
     }
 
     /**
      * 用户注册接口（示例，需实现）
+     * 
      * @return 操作结果
      */
     @PostMapping("/register")
-    public ResponseVO<RegisterResponse> register(@RequestBody @Validated
-                                                 RegisterRequest request) {
-        RegisterResponse resp = userService.register(request);
-        return ResponseVO.success(resp);
+    public ResponseVO<RegisterResponse> register(@RequestBody @Validated RegisterRequest request) {
+        ResponseVO<RegisterResponse> resp = userService.register(request);
+        return resp;
     }
 
     /**
      * 获取当前用户信息接口（示例，需实现）
+     * 
      * @return 用户信息
      */
     @GetMapping("/info")
@@ -74,4 +82,4 @@ public class UserController {
             return ResponseVO.error(500, "MyBatis配置异常: " + e.getMessage());
         }
     }
-} 
+}
