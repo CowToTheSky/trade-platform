@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.platform.trade.mapper.OrderMapper">
+
+    <!-- 新增订单 -->
+    <insert id="insertOrder" parameterType="com.platform.trade.model.Order">
+        INSERT INTO t_order (id, user_id, product_code, product_name, order_type, 
+        price, quantity, filled_quantity, remaining_quantity, status, filled_amount, 
+        commission, source, remark, created_at, updated_at) 
+        VALUES (#{id}, #{userId}, #{productCode}, #{productName}, #{orderType}, 
+        #{price}, #{quantity}, #{filledQuantity}, #{remainingQuantity}, #{status}, 
+        #{filledAmount}, #{commission}, #{source}, #{remark}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <!-- 根据订单ID查询订单 -->
+    <select id="selectByOrderId" parameterType="long" resultType="com.platform.trade.model.Order">
+        SELECT * FROM t_order WHERE id = #{orderId}
+    </select>
+
+    <!-- 根据用户ID查询订单列表 -->
+    <select id="selectByUserId" resultType="com.platform.trade.model.Order">
+        SELECT * FROM t_order WHERE user_id = #{userId} 
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询用户订单总数 -->
+    <select id="countByUserId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM t_order WHERE user_id = #{userId}
+    </select>
+
+    <!-- 更新订单状态 -->
+    <update id="updateOrderStatus">
+        UPDATE t_order SET status = #{status}, filled_quantity = #{filledQuantity}, 
+        remaining_quantity = #{remainingQuantity}, filled_amount = #{filledAmount}, 
+        updated_at = NOW() WHERE id = #{orderId}
+    </update>
+
+    <!-- 撤销订单 -->
+    <update id="cancelOrder">
+        UPDATE t_order SET status = 4, cancelled_at = NOW(), updated_at = NOW() 
+        WHERE id = #{orderId} AND status IN (1, 2)
+    </update>
+
+    <!-- 查询待成交和部分成交的订单 -->
+    <select id="selectPendingOrders" resultType="com.platform.trade.model.Order">
+        SELECT * FROM t_order WHERE product_code = #{productCode} 
+        AND order_type = #{orderType} AND status IN (1, 2) 
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 根据订单ID和用户ID查询订单（用于权限验证） -->
+    <select id="selectByOrderIdAndUserId" resultType="com.platform.trade.model.Order">
+        SELECT * FROM t_order WHERE id = #{orderId} AND user_id = #{userId}
+    </select>
+
+</mapper>

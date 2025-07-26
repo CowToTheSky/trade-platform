@@ -73,6 +73,7 @@ public class UserServiceImpl implements UserService {
         String token = JwtUtil.generateToken(user.getId(), user.getUsername());
         // 组装响应
         LoginResponse resp = new LoginResponse();
+        resp.setId(user.getId());
         resp.setToken(token);
         resp.setUsername(user.getUsername());
         return ResponseVO.success(resp, "登录成功!");

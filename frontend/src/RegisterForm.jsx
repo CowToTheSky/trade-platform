@@ -1,21 +1,27 @@
 import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
       const res = await axios.post("/api/user/register", values);
       if (res.data.success) {
-        message.success("注册成功！");
+        message.success("注册成功！正在跳转到登录页面...", 2);
+        // 延迟2秒后跳转到登录页面
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
         message.error(res.data.message || "注册失败");
       }
     } catch (e) {
-      message.error("请求失败");
+      message.error("请求失败，请检查网络连接");
     }
     setLoading(false);
   };
@@ -63,4 +69,4 @@ const RegisterForm = () => {
   );
 };
 
-export default RegisterForm; 
+export default RegisterForm;

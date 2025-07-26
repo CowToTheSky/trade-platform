@@ -13,6 +13,7 @@
     <modules>
         <module>user-service</module>
         <module>common</module>
+        <module>trade-service</module>
     </modules>
 
     <!-- 统一依赖管理 -->

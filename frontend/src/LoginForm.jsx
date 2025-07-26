@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
 import axios from "axios";
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
@@ -11,6 +11,10 @@ const LoginForm = () => {
       const res = await axios.post("/api/user/login", values);
       if (res.data.success) {
         message.success("登录成功！");
+        // 调用父组件的登录成功回调
+        if (onLoginSuccess) {
+          onLoginSuccess(res.data.data);
+        }
       } else {
         message.error(res.data.message || "登录失败");
       }
@@ -51,4 +55,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm; 
+export default LoginForm;

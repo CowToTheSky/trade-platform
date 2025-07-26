@@ -9,9 +9,11 @@ import lombok.Data;
  */
 @Data
 public class LoginResponse {
+    /** 用户ID */
+    private Long id;
     /** JWT Token */
     private String token;
     /** 用户名 */
     private String username;
     // 可扩展更多用户信息
-} 
+}
