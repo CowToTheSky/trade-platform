@@ -2,7 +2,6 @@ package com.platform.trade.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +17,7 @@ import com.platform.trade.constant.TradeConstants;
 import com.platform.trade.constant.TradeErrorCode;
 import com.platform.trade.mapper.OrderMapper;
 import com.platform.trade.model.Order;
+import com.platform.trade.service.OrderMatchingService;
 import com.platform.trade.service.ProductService;
 import com.platform.trade.service.TradeService;
 import com.platform.trade.vo.OrderRequest;
@@ -43,6 +43,9 @@ public class TradeServiceImpl implements TradeService {
     
     @Autowired
     private AsyncOrderProcessor asyncOrderProcessor;
+    
+    @Autowired
+    private OrderMatchingService orderMatchingService;
     
     @Override
     @Transactional
@@ -88,7 +91,7 @@ public class TradeServiceImpl implements TradeService {
         try {
             // 使用异步订单处理器进行撮合
             asyncOrderProcessor.processOrderMatchingAsync(orderRequest.getProductCode())
-                .whenComplete((result, throwable) -> {
+                .whenComplete((voidResult, throwable) -> {
                     if (throwable != null) {
                         log.error("异步撮合处理失败: productCode={}, error={}", 
                                 orderRequest.getProductCode(), throwable.getMessage(), throwable);
@@ -162,40 +165,8 @@ public class TradeServiceImpl implements TradeService {
     @Override
     @Transactional
     public void matchOrders(String productCode) {
-        log.info("开始撮合订单: productCode={}", productCode);
-        
-        // 简化的撮合逻辑：查找买卖双方订单进行匹配
-        List<Order> buyOrders = orderMapper.selectPendingOrders(productCode, TradeConstants.ORDER_TYPE_BUY);
-        List<Order> sellOrders = orderMapper.selectPendingOrders(productCode, TradeConstants.ORDER_TYPE_SELL);
-        
-        // 按价格排序：买单按价格降序，卖单按价格升序
-        buyOrders.sort((o1, o2) -> o2.getPrice().compareTo(o1.getPrice()));
-        sellOrders.sort((o1, o2) -> o1.getPrice().compareTo(o2.getPrice()));
-        
-        // 撮合逻辑
-        for (Order buyOrder : buyOrders) {
-            for (Order sellOrder : sellOrders) {
-                if (buyOrder.getPrice().compareTo(sellOrder.getPrice()) >= 0) {
-                    // 可以成交
-                    int matchQuantity = Math.min(buyOrder.getRemainingQuantity(), sellOrder.getRemainingQuantity());
-                    BigDecimal matchPrice = sellOrder.getPrice(); // 以卖价成交
-                    
-                    // 更新买单
-                    updateOrderAfterMatch(buyOrder, matchQuantity, matchPrice);
-                    
-                    // 更新卖单
-                    updateOrderAfterMatch(sellOrder, matchQuantity, matchPrice);
-                    
-                    log.info("订单撮合成功: 买单={}, 卖单={}, 成交数量={}, 成交价格={}", 
-                            buyOrder.getId(), sellOrder.getId(), matchQuantity, matchPrice);
-                    
-                    // 如果卖单完全成交，跳出内层循环
-                    if (sellOrder.getRemainingQuantity() <= 0) {
-                        break;
-                    }
-                }
-            }
-        }
+        // 委托给专门的撮合服务执行
+        orderMatchingService.executeMatching(productCode);
     }
     
     /**

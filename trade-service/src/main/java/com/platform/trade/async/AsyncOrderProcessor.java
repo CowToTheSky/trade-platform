@@ -1,10 +1,11 @@
 package com.platform.trade.async;
 
-import com.platform.trade.service.TradeService;
+import com.platform.trade.service.OrderMatchingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,7 +24,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AsyncOrderProcessor {
     
     @Autowired
-    private TradeService tradeService;
+    private OrderMatchingService orderMatchingService;
+    
+    @Autowired
+    @Lazy
+    private com.platform.trade.monitor.PerformanceMonitor performanceMonitor;
     
     // 订单处理计数器
     private final AtomicLong processedOrderCount = new AtomicLong(0);
@@ -62,16 +67,25 @@ public class AsyncOrderProcessor {
     @Async
     public CompletableFuture<Void> processOrderMatchingAsync(String productCode) {
         return CompletableFuture.runAsync(() -> {
+            // 记录处理开始时间（用于性能监控）
+            long monitorStartTime = performanceMonitor != null ? 
+                    performanceMonitor.recordProcessingStart(productCode) : System.currentTimeMillis();
             long startTime = System.currentTimeMillis();
+            
             try {
                 log.info("开始异步处理订单撮合，产品代码：{}", productCode);
                 
                 // 调用撮合服务
-                tradeService.matchOrders(productCode);
+                orderMatchingService.executeMatching(productCode);
                 
                 // 增加处理计数
                 long count = processedOrderCount.incrementAndGet();
                 long duration = System.currentTimeMillis() - startTime;
+                
+                // 记录性能监控数据
+                if (performanceMonitor != null) {
+                    performanceMonitor.recordProcessingEnd(productCode, monitorStartTime);
+                }
                 
                 log.info("订单撮合处理完成，产品代码：{}，耗时：{}ms，累计处理：{}笔", 
                         productCode, duration, count);
@@ -79,6 +93,11 @@ public class AsyncOrderProcessor {
             } catch (Exception e) {
                 long failedCount = failedOrderCount.incrementAndGet();
                 long duration = System.currentTimeMillis() - startTime;
+                
+                // 即使失败也要记录性能数据
+                if (performanceMonitor != null) {
+                    performanceMonitor.recordProcessingEnd(productCode, monitorStartTime);
+                }
                 
                 log.error("订单撮合处理失败，产品代码：{}，耗时：{}ms，累计失败：{}笔，错误信息：{}", 
                         productCode, duration, failedCount, e.getMessage(), e);
@@ -120,7 +139,7 @@ public class AsyncOrderProcessor {
                 .execute(() -> {
                     try {
                         log.info("重试订单撮合：产品代码={}", productCode);
-                        tradeService.matchOrders(productCode);
+                        orderMatchingService.executeMatching(productCode);
                         log.info("重试订单撮合成功：产品代码={}", productCode);
                     } catch (Exception retryException) {
                         log.error("重试订单撮合仍然失败：产品代码={}，错误信息：{}", 

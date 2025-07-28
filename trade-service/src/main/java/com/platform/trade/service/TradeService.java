@@ -1,9 +1,8 @@
 package com.platform.trade.service;
 
+import com.github.pagehelper.PageInfo;
 import com.platform.trade.vo.OrderRequest;
 import com.platform.trade.vo.OrderResponse;
-import com.github.pagehelper.PageInfo;
-import java.util.List;
 
 /**
  * 交易服务接口

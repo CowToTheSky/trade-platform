@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Table, Card, Button, Modal, Form, Input, Select, message, Statistic, Row, Col, Tag } from 'antd';
-import { ShoppingCartOutlined, BarChartOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, BarChartOutlined, UserOutlined, LogoutOutlined, MonitorOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
 
 const TradingPlatform = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [selectedMenu, setSelectedMenu] = useState('products');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -26,7 +28,6 @@ const TradingPlatform = ({ user, onLogout }) => {
         const pageInfo = response.data.data;
         if (pageInfo && Array.isArray(pageInfo.list)) {
           setProducts(pageInfo.list);
-          console.log('设置产品列表:', pageInfo.list); // 调试日志
         } else {
           console.warn('产品数据格式异常:', pageInfo);
           setProducts([]);
@@ -60,11 +61,19 @@ const TradingPlatform = ({ user, onLogout }) => {
         if (orderData && Array.isArray(orderData.list)) {
           // 如果是分页结构，从list字段获取订单数组
           console.log('设置订单数据(分页):', orderData.list); // 调试日志
-          setOrders(orderData.list);
+          const processedOrders = orderData.list.map((order, index) => ({
+            ...order,
+            id: order.id || `temp_${Date.now()}_${index}` // 确保每个订单都有唯一的id
+          }));
+          setOrders(processedOrders);
         } else if (Array.isArray(orderData)) {
           // 如果直接是数组
           console.log('设置订单数据(数组):', orderData); // 调试日志
-          setOrders(orderData);
+          const processedOrders = orderData.map((order, index) => ({
+            ...order,
+            id: order.id || `temp_${Date.now()}_${index}` // 确保每个订单都有唯一的id
+          }));
+          setOrders(processedOrders);
         } else {
           console.warn('订单数据格式异常:', orderData);
           setOrders([]);
@@ -145,7 +154,18 @@ const TradingPlatform = ({ user, onLogout }) => {
   // 撤销订单
   const handleCancelOrder = async (orderId) => {
     try {
-      const response = await axios.put(`/api/trade/orders/${orderId}/cancel`);
+      // 验证用户信息
+      if (!user || !user.id) {
+        message.error('用户信息缺失，请重新登录');
+        return;
+      }
+      
+      console.log('撤销订单请求:', { orderId, userId: user.id }); // 详细日志
+      
+      const response = await axios.put(`/api/trade/orders/${orderId}/cancel?userId=${user.id}`);
+      
+      console.log('撤销订单响应:', response); // 详细日志
+      
       if (response.data.success) {
         message.success('撤销成功！');
         fetchOrders();
@@ -153,14 +173,20 @@ const TradingPlatform = ({ user, onLogout }) => {
         message.error(response.data.message || '撤销失败');
       }
     } catch (error) {
-      console.error('撤销订单失败:', error);
+      console.error('撤销订单失败 - 完整错误信息:', error);
+      console.error('错误响应数据:', error.response?.data);
+      console.error('错误状态码:', error.response?.status);
+      console.error('错误状态文本:', error.response?.statusText);
+      
       // 显示后端返回的具体错误信息
       if (error.response && error.response.data && error.response.data.message) {
-        message.error(error.response.data.message);
+        message.error(`撤销失败: ${error.response.data.message}`);
+      } else if (error.response && error.response.status) {
+        message.error(`撤销失败: HTTP ${error.response.status} - ${error.response.statusText || '服务器错误'}`);
       } else if (error.message) {
-        message.error(error.message);
+        message.error(`撤销失败: ${error.message}`);
       } else {
-        message.error('网络请求失败');
+        message.error('撤销失败: 网络请求失败');
       }
     }
   };
@@ -332,7 +358,15 @@ const TradingPlatform = ({ user, onLogout }) => {
         <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>
           交易平台
         </div>
-        <div style={{ color: 'white' }}>
+        <div style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+          <Button 
+            type="text" 
+            icon={<MonitorOutlined />} 
+            style={{ color: 'white', marginRight: 16 }}
+            onClick={() => navigate('/monitor')}
+          >
+            系统监控
+          </Button>
           <UserOutlined style={{ marginRight: 8 }} />
           {user?.username || '用户'}
           <Button 

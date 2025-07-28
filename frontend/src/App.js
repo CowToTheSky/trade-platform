@@ -3,9 +3,36 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocat
 import RegisterForm from './RegisterForm';
 import LoginForm from './LoginForm';
 import TradingPlatform from './TradingPlatform';
+import MonitorDashboard from './MonitorDashboard';
 import 'antd/dist/reset.css';
 import { Button } from 'antd';
 import axios from 'axios';
+
+// 配置axios响应拦截器
+axios.interceptors.response.use(
+  (response) => {
+    // 对于2xx状态码，直接返回响应
+    return response;
+  },
+  (error) => {
+    // 对于非2xx状态码，检查是否有响应数据
+    if (error.response && error.response.data) {
+      // 如果后端返回了标准的ResponseVO格式，将其转换为正常响应
+      // 这样前端就可以统一处理success字段
+      const responseData = error.response.data;
+      if (responseData.hasOwnProperty('success') && responseData.hasOwnProperty('message')) {
+        // 创建一个模拟的成功响应，但保持原始数据
+        return Promise.resolve({
+          ...error.response,
+          status: 200,
+          data: responseData
+        });
+      }
+    }
+    // 对于其他错误，继续抛出
+    return Promise.reject(error);
+  }
+);
 
 // 认证页面组件
 function AuthPage({ user, onLoginSuccess }) {
@@ -110,6 +137,10 @@ function App() {
             <Route 
               path="/" 
               element={<TradingPlatform user={user} onLogout={handleLogout} />} 
+            />
+            <Route 
+              path="/monitor" 
+              element={<MonitorDashboard user={user} onLogout={handleLogout} />} 
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>

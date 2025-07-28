@@ -10,32 +10,60 @@ import java.time.LocalDateTime;
  */
 @Data
 public class User {
-    /** 用户ID */
+    /**
+     * 用户ID
+     */
     private Long id;
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     private String username;
-    /** 密码（加密存储） */
+    /**
+     * 密码（加密存储）
+     */
     private String password;
-    /** 邮箱 */
+    /**
+     * 邮箱
+     */
     private String email;
-    /** 手机号 */
+    /**
+     * 手机号
+     */
     private String phone;
-    /** 用户状态（如：0-禁用，1-正常） */
+    /**
+     * 用户状态（如：0-禁用，1-正常）
+     */
     private Integer status;
-    /** 用户角色（如：admin、user等） */
+    /**
+     * 用户角色（如：admin、user等）
+     */
     private String role;
-    /** 头像URL */
+    /**
+     * 头像URL
+     */
     private String avatarUrl;
-    /** 上次登录IP */
+    /**
+     * 上次登录IP
+     */
     private String lastLoginIp;
-    /** 上次登录时间 */
+    /**
+     * 上次登录时间
+     */
     private LocalDateTime lastLoginTime;
-    /** 连续登录失败次数 */
+    /**
+     * 连续登录失败次数
+     */
     private Integer loginFailCount;
-    /** 账户锁定截止时间 */
+    /**
+     * 账户锁定截止时间
+     */
     private LocalDateTime lockedUntil;
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     private LocalDateTime createdAt;
-    /** 更新时间 */
+    /**
+     * 更新时间
+     */
     private LocalDateTime updatedAt;
 }

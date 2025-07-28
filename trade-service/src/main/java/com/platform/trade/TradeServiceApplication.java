@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @SpringBootApplication
 @MapperScan("com.platform.trade.mapper")
+@ComponentScan(basePackages = {"com.platform.trade", "com.platform.common"})
 public class TradeServiceApplication {
 
     public static void main(String[] args) {
